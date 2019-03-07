@@ -19,8 +19,6 @@ constexpr std::array<int, 22> notes = {
   81, 81, 81, 81
 };
 
-constexpr float bpm = 260.0;
-
 float note_to_frequency_hz(int note) {
   constexpr float pitch_standard_hz = 440.0f;
   return pitch_standard_hz * std::pow(2.0f, float(note - 69) / 12.0f);
@@ -28,19 +26,22 @@ float note_to_frequency_hz(int note) {
 
 using std::experimental::audio::generator;
 
-generator<float> synth(const float _sample_rate)
+constexpr float m2pif = 2. * M_PI;
+
+generator<float> synth(const int bpm, const int sample_rate)
 {
-  const float _note_duration_ms = 60'000.0f / bpm;
-  float _phase = 0;
+  const int note_duration_samples = sample_rate * 60.f / bpm;
+  const float frequency_factor = m2pif / sample_rate;
+
+  float phase = 0;
   for (auto const note : notes) {
-    float frequency_hz = note_to_frequency_hz(note);
-    float _delta = 2.0f * frequency_hz * static_cast<float>(M_PI / _sample_rate);
-    for (float _ms_counter = 0;
-        _ms_counter < _note_duration_ms;
-        _ms_counter += 1000. / _sample_rate) {
-      auto next_sample = std::copysign(0.1f, std::sin(_phase));
-      _phase = std::fmod(_phase + _delta, 2.0f * float(M_PI));
-      co_yield next_sample;
+
+    const float delta = frequency_factor * note_to_frequency_hz(note);
+    for (int i = 0; i < note_duration_samples; ++i) {
+
+      co_yield std::copysign(0.1f, std::sin(phase));
+      phase = std::fmod(phase + delta, m2pif);
+
     }
   }
 }
@@ -52,7 +53,7 @@ int main() {
   auto d = get_default_output_device();
   const auto rate = d.get_sample_rate();
 
-  auto g = synth(rate);
+  auto g = synth(260, rate);
 
   std::atomic<bool> stop{false};
   playGenerated(d, g, stop);
