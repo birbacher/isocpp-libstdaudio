@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.12)
 project(libstdaudio)
 
 set(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
 
 if (APPLE)
     add_definitions(-DLIBSTDAUDIO_BACKEND_COREAUDIO)
@@ -22,6 +23,7 @@ add_library(stdaudio
         src/device_impl.h
         src/buffer.cpp
         src/buffer_list.cpp
+        src/generator.cpp
         src/backend/coreaudio_backend.cpp
         src/backend/null_backend.cpp)
 
