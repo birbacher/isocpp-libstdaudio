@@ -56,7 +56,7 @@ int main() {
   auto g = synth(260, rate);
 
   std::atomic<bool> stop{false};
-  playGenerated(d, g, stop);
+  installGenerator(d, g, stop);
 
   d.start();
   while (!stop.load()) {
